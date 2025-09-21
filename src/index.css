@@ -1,0 +1,124 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Smooth animations for sticky notes */
+.sticky-note {
+  /* transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1); */
+  will-change: transform, box-shadow;
+}
+
+.sticky-note:hover:not(.dragging) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.sticky-note:active:not(.dragging) {
+  transform: translateY(-1px);
+}
+
+.sticky-note.dragging {
+  transition: none !important;
+  transform: none !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.2) !important;
+  z-index: 9999 !important;
+}
+
+/* Enhanced resize handle with better visibility */
+.resize-handle {
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.resize-handle:hover {
+  background: linear-gradient(-45deg, transparent 30%, #555 30%, #555 40%, transparent 40%) !important;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Smooth button animations */
+button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Color picker animations */
+.color-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.color-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Toolbar animations */
+.toolbar {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Note creation animation */
+.note-appear {
+  animation: noteAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes noteAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Trash zone pulse animation */
+.trash-zone-active {
+  animation: trashPulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes trashPulse {
+  from {
+    box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
+  }
+  to {
+    box-shadow: 0 8px 32px rgba(255, 71, 87, 0.5);
+  }
+}
