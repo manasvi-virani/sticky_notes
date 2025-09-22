@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import type { Note, Position, Size, NoteColor } from "./types";
 import { NOTE_COLORS } from "./types";
-import { StickyNote } from "./components/StickyNote";
-import { Toolbar } from "./components/Toolbar";
-import { TrashZone } from "./components/TrashZone";
+import { StickyNote } from "./components/stickyNotes/StickyNote";
+import { Toolbar } from "./components/toolbar/Toolbar";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useApiStorage } from "./hooks/useApiStorage";
+import styles from "./App.module.css";
+import { TrashZone } from "./components/trashZone/TrashZone";
+import DeleteButton from "./components/trashZone/DeleteButton";
 
 const App: React.FC = () => {
+
   // Local storage integration for persistence (fallback)
   const { notes: savedNotes, saveNotes: saveToLocal } = useLocalStorage();
 
@@ -19,9 +22,7 @@ const App: React.FC = () => {
     deleteNote: deleteNoteFromApi,
     isLoading: apiLoading,
     error: apiError,
-    isOnline,
     clearError,
-    toggleOnlineMode,
   } = useApiStorage();
 
   // Application state
@@ -41,13 +42,14 @@ const App: React.FC = () => {
         const localNote = byId.get(serverNote.id);
         return localNote
           ? {
-              ...serverNote,
-              position: localNote.position,
-              size: localNote.size,
-              zIndex: localNote.zIndex,
-            }
+            ...serverNote,
+            position: localNote.position,
+            size: localNote.size,
+            zIndex: localNote.zIndex,
+          }
           : serverNote;
       });
+
       // Keep any local-only notes too
       const localOnly = prev.filter(
         (n) => !serverNotes.some((s) => s.id === n.id)
@@ -61,16 +63,27 @@ const App: React.FC = () => {
 
   // Manual refresh from server
   const refreshFromServer = useCallback(() => {
-    if (isOnline && apiNotes.length > 0) {
+    if (apiNotes.length > 0) {
       mergeServerNotes(apiNotes);
     }
-  }, [isOnline, apiNotes, mergeServerNotes]);
+  }, [apiNotes, mergeServerNotes]);
+
+  const deleteAllNotes = useCallback(async () => {
+    // Optimistically update UI immediately
+    setNotes([]);
+    try {
+      await Promise.all(apiNotes.map(note => deleteNoteFromApi(note.id)));
+    } catch (error) {
+      console.error("Failed to delete all notes from API:", error)
+    }
+
+  }, [apiNotes, deleteNoteFromApi]);
 
   // Hydrate notes ONCE from API or local storage, don't keep overwriting
   useEffect(() => {
     if (hasHydratedRef.current) return;
 
-    if (isOnline && apiNotes.length > 0) {
+    if (apiNotes.length > 0) {
       setNotes(apiNotes);
       const maxZ = Math.max(...apiNotes.map((note) => note.zIndex));
       setNextZIndex(maxZ + 1);
@@ -78,13 +91,13 @@ const App: React.FC = () => {
       return;
     }
 
-    if (!isOnline && savedNotes.length > 0) {
+    if (savedNotes.length > 0) {
       setNotes(savedNotes);
       const maxZ = Math.max(...savedNotes.map((note) => note.zIndex));
       setNextZIndex(maxZ + 1);
       hasHydratedRef.current = true;
     }
-  }, [isOnline, apiNotes, savedNotes]);
+  }, [apiNotes, savedNotes]);
 
   // Save to both local storage (always) and API (when online)
   useEffect(() => {
@@ -114,23 +127,46 @@ const App: React.FC = () => {
     setNextZIndex((prev) => prev + 1);
 
     // Try to save to API if online
-    if (isOnline) {
-      try {
-        await saveNoteToApi(newNote);
-      } catch (error) {
-        console.error("Failed to save new note to API:", error);
-        // Note: UI is already updated optimistically, so we don't revert
-        // The error will be shown in the UI via apiError state
-      }
-    }
-  }, [selectedColor, nextZIndex, isOnline, saveNoteToApi]);
 
-  const moveNote = useCallback((id: string, position: Position) => {
-    // Keep drag operations purely local - no API sync for position changes
-    setNotes((prev) =>
-      prev.map((note) => (note.id === id ? { ...note, position } : note))
-    );
-  }, []);
+    try {
+      await saveNoteToApi(newNote);
+    } catch (error) {
+      console.error("Failed to save new note to API:", error);
+      // Note: UI is already updated optimistically, so we don't revert
+      // The error will be shown in the UI via apiError state
+    }
+
+  }, [selectedColor, nextZIndex, , saveNoteToApi]);
+
+  const moveNote = useCallback(
+    async (id: string, position: Position) => {
+      // Update the note's position in the state
+      setNotes((prev) =>
+        prev.map((note) => (note.id === id ? { ...note, position } : note))
+      );
+
+      // Find the updated note
+      const updatedNote = notes.find((note) => note.id === id);
+      if (updatedNote) {
+        const noteWithNewPosition = { ...updatedNote, position };
+
+        // Save the updated note to the API if online
+
+        try {
+          await saveNoteToApi(noteWithNewPosition);
+        } catch (error) {
+          console.error("Failed to save moved note to API:", error);
+        }
+
+
+        // Always save to local storage as a fallback
+        saveToLocal(notes.map((note) =>
+          note.id === id ? noteWithNewPosition : note
+        ));
+      }
+    },
+    [, saveNoteToApi, saveToLocal, notes]
+  );
 
   const resizeNote = useCallback((id: string, size: Size) => {
     // Keep resize operations purely local - no API sync for size changes
@@ -145,17 +181,15 @@ const App: React.FC = () => {
       setNotes((prev) => prev.filter((note) => note.id !== id));
 
       // Try to delete from API if online
-      if (isOnline) {
-        try {
-          await deleteNoteFromApi(id);
-        } catch (error) {
-          console.error("Failed to delete note from API:", error);
-          // Note: UI is already updated optimistically, so we don't revert
-          // The error will be shown in the UI via apiError state
-        }
+
+      try {
+        await deleteNoteFromApi(id);
+      } catch (error) {
+        console.error("Failed to delete note from API:", error);
       }
+
     },
-    [isOnline, deleteNoteFromApi]
+    [deleteNoteFromApi]
   );
 
   const updateNoteText = useCallback(
@@ -165,21 +199,17 @@ const App: React.FC = () => {
         prev.map((note) => (note.id === id ? { ...note, text } : note))
       );
 
-      // Try to save to API if online
-      if (isOnline) {
-        const updatedNote = notes.find((note) => note.id === id);
-        if (updatedNote) {
-          try {
-            await saveNoteToApi({ ...updatedNote, text });
-          } catch (error) {
-            console.error("Failed to save note text to API:", error);
-            // Note: UI is already updated optimistically, so we don't revert
-            // The error will be shown in the UI via apiError state
-          }
+      const updatedNote = notes.find((note) => note.id === id);
+      if (updatedNote) {
+        try {
+          await saveNoteToApi({ ...updatedNote, text });
+        } catch (error) {
+          console.error("Failed to save note text to API:", error);
         }
       }
+
     },
-    [isOnline, saveNoteToApi, notes]
+    [ saveNoteToApi, notes]
   );
 
   const bringToFront = useCallback(
@@ -249,27 +279,19 @@ const App: React.FC = () => {
       setNextZIndex((prev) => prev + 1);
 
       // Try to save to API if online
-      if (isOnline) {
+     
         try {
           await saveNoteToApi(newNote);
         } catch (error) {
           console.error("Failed to save new note to API:", error);
-          // Note: UI is already updated optimistically, so we don't revert
-          // The error will be shown in the UI via apiError state
         }
-      }
+      
     }
   };
 
   return (
     <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        position: "relative",
-        overflow: "hidden",
-        cursor: isDraggingNote ? "grabbing" : "default",
-      }}
+      className={`${styles.canvas} ${isDraggingNote ? styles.grabbing : ""}`}
       onClick={handleCanvasClick}
     >
       <Toolbar
@@ -291,74 +313,28 @@ const App: React.FC = () => {
       <TrashZone ref={trashZoneRef} isActive={isDraggingNote} />
 
       {/* API Status Bar */}
-      <div
-        style={{
-          position: "fixed",
-          top: "20px",
-          right: "20px",
-          fontSize: "12px",
-          backgroundColor: "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(10px)",
-          padding: "8px 12px",
-          borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.3)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          maxWidth: "300px",
-        }}
-      >
+      <div className={styles.statusBar}>
+
         <button
-          onClick={toggleOnlineMode}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "14px",
-            padding: "2px",
-          }}
-          title={`Click to switch to ${isOnline ? "offline" : "online"} mode`}
+          onClick={refreshFromServer}
+          className={styles.refreshBtn}
+          title="Refresh from server (preserves local positions)"
         >
-          {isOnline ? "🌐" : "📴"}
+          🔄
         </button>
-
-        <span style={{ color: isOnline ? "#4CAF50" : "#FF9800" }}>
-          {isOnline ? "Online" : "Offline"}
-        </span>
-
-        {apiLoading && <span>⏳</span>}
-
-        {isOnline && (
-          <button
-            onClick={refreshFromServer}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "12px",
-              padding: "2px",
-              color: "#4CAF50",
-            }}
-            title="Refresh from server (preserves local positions)"
-          >
-            🔄
-          </button>
-        )}
-
+        <button
+          onClick={deleteAllNotes}
+          className={styles.btnDeleteAll}
+          title={"Delete All Notes"}
+        >
+          <DeleteButton size={18} color="#f44336" />
+        </button>
         {apiError && (
           <>
             <span style={{ color: "#f44336" }}>❌</span>
             <button
               onClick={clearError}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "10px",
-                color: "#666",
-                textDecoration: "underline",
-              }}
+              className={styles.clearBtn}
               title="Clear error"
             >
               Clear
@@ -369,44 +345,12 @@ const App: React.FC = () => {
 
       {/* Error Message */}
       {apiError && (
-        <div
-          style={{
-            position: "fixed",
-            top: "70px",
-            right: "20px",
-            fontSize: "11px",
-            color: "#f44336",
-            backgroundColor: "rgba(255,235,238,0.95)",
-            backdropFilter: "blur(10px)",
-            padding: "8px 12px",
-            borderRadius: "6px",
-            border: "1px solid rgba(244,67,54,0.3)",
-            boxShadow: "0 2px 8px rgba(244,67,54,0.1)",
-            maxWidth: "300px",
-            lineHeight: "1.3",
-          }}
-        >
+        <div className={styles.errorMsg}>
           {apiError}
         </div>
       )}
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: "20px",
-          left: "20px",
-          fontSize: "12px",
-          color: "#555",
-          backgroundColor: "rgba(255,255,255,0.9)",
-          backdropFilter: "blur(10px)",
-          padding: "10px 16px",
-          borderRadius: "8px",
-          border: "1px solid rgba(255,255,255,0.3)",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-          maxWidth: "400px",
-          lineHeight: "1.4",
-        }}
-      >
+      <div className={styles.tips}>
         💡 <strong>Tips:</strong> Double-click canvas to create • Drag to move •
         Drag corner to resize • Drag to 🗑️ to delete
         <br />

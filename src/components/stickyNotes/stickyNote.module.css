@@ -1,0 +1,91 @@
+/* Smooth animations for sticky notes */
+.stickyNote {
+    /* transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1); */
+    will-change: transform, box-shadow;
+}
+
+.stickyNote:hover:not(.dragging) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stickyNote:active:not(.dragging) {
+    transform: translateY(-1px);
+}
+
+.stickyNote.dragging {
+    transition: none !important;
+    transform: none !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2) !important;
+    z-index: 9999 !important;
+}
+
+
+
+/* Note creation animation */
+.noteAppear {
+    animation: noteAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.note {
+    position: absolute;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    resize: none;
+    outline: none;
+    border: none;
+    transition: box-shadow 0.2s, transform 0.1s;
+    user-select: none;
+    cursor: grab;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.noteActive {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    z-index: 100;
+}
+
+/* Enhanced resize handle with better visibility */
+.resizeHandle {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    cursor: se-resize;
+    background: linear-gradient(-45deg, transparent 30%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.3) 40%, transparent 40%);
+    border-radius: 0 0 6px 0;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.resizeHandle:hover {
+    background: linear-gradient(-45deg, transparent 30%, #555 30%, #555 40%, transparent 40%) !important;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.textarea {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    resize: none;
+    font-size: inherit;
+    color: #333;
+    outline: none;
+    padding: 0;
+    margin: 0;
+}
+
+.content {
+  flex: 1;
+  padding: 8px;
+  overflow: hidden;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  line-height: 1.4;
+}

@@ -12,9 +12,9 @@ The application follows a hierarchical component structure with the main `App` c
 
 The drag-and-drop functionality is implemented using a custom hook (`useDragAndDrop`) that manages drag state and coordinates between different interaction types (move, resize, delete). This approach provides fine-grained control over the user experience while maintaining clean separation between UI components and business logic. 
 
-Data persistence is handled through a dual-layer approach: local storage (`useLocalStorage`) provides offline functionality and serves as a fallback, while the REST API integration (`useApiStorage`) enables server synchronization with optimistic updates. The mock API service simulates realistic network conditions with configurable delays and error rates, providing a comprehensive testing environment for async operations.
+Data persistence is handled through a dual-layer approach: local storage (`useLocalStorage`) provides functionality and serves as a fallback, while the REST API integration (`useApiStorage`) enables server synchronization with optimistic updates. The mock API service simulates realistic network conditions with configurable delays and error rates, providing a comprehensive testing environment for async operations.
 
-The component architecture ensures that each note is an independent entity with its own state for text editing, while global operations like z-index management and note creation are handled at the application level. The application supports both local-only and API-enabled modes, allowing users to toggle between offline and online functionality. TypeScript provides compile-time type safety with strict import/export patterns required by Vite's build system.
+The component architecture ensures that each note is an independent entity with its own state for text editing, while global operations like z-index management and note creation are handled at the application level. The application supports API-enabled modes. TypeScript provides compile-time type safety with strict import/export patterns required by Vite's build system.
 
 ## Performance Considerations
 

@@ -1,0 +1,33 @@
+.trashZone {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  border: 3px dashed #a4b0be;
+  background-color: rgba(241, 242, 246, 0.9);
+  color: #a4b0be;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.active {
+  background-color: #ff4757;
+  border-color: #ff3742;
+  color: white;
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 8px 32px rgba(255, 71, 87, 0.4);
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  display: block;
+}

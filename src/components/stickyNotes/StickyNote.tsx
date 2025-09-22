@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Note, Position } from '../types';
+import type { Note, Position } from '../../types';
+import styles from "./StickyNote.module.css";
 
 interface StickyNoteProps {
   note: Note;
@@ -32,11 +33,11 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
   const handleMouseDown = (e: React.MouseEvent, dragType: 'move' | 'resize') => {
     e.preventDefault();
     onBringToFront(note.id);
-    
+
     const clientPosition = { x: e.clientX, y: e.clientY };
     const notePosition = note.position;
     const noteSize = dragType === 'resize' ? note.size : undefined;
-    
+
     onStartDrag(note.id, dragType, clientPosition, notePosition, noteSize);
   };
 
@@ -68,55 +69,30 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
   return (
     <div
       ref={noteRef}
-      className="sticky-note note-appear"
+      className={`${styles.note} ${styles.stickyNote} ${styles.noteAppear} ${note.zIndex > 99 ? styles.noteActive : ""}`}
       style={{
-        position: 'absolute',
         left: note.position.x,
         top: note.position.y,
         width: note.size.width,
         height: note.size.height,
-        backgroundColor: note.color,
-        border: '2px solid rgba(255,255,255,0.3)',
-        borderRadius: '8px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-        cursor: 'move',
+        background: note.color,
         zIndex: note.zIndex,
-        userSelect: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
       }}
       onMouseDown={(e) => handleMouseDown(e, 'move')}
       onDoubleClick={handleDoubleClick}
     >
       <div
-        style={{
-          flex: 1,
-          padding: '8px',
-          overflow: 'hidden',
-          fontSize: '14px',
-          fontFamily: 'Arial, sans-serif',
-          lineHeight: '1.4'
-        }}
+        className={styles.content}
       >
         {isEditing ? (
           <textarea
+
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onBlur={handleTextSubmit}
             onKeyDown={handleKeyDown}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              outline: 'none',
-              backgroundColor: 'transparent',
-              resize: 'none',
-              fontSize: '14px',
-              fontFamily: 'Arial, sans-serif',
-              lineHeight: '1.4'
-            }}
+            className={styles.textarea}
           />
         ) : (
           <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -124,19 +100,9 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
           </div>
         )}
       </div>
-      
+
       <div
-        className="resize-handle"
-        style={{
-          position: 'absolute',
-          bottom: '2px',
-          right: '2px',
-          width: '16px',
-          height: '16px',
-          cursor: 'se-resize',
-          background: 'linear-gradient(-45deg, transparent 30%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.3) 40%, transparent 40%)',
-          borderRadius: '0 0 6px 0',
-        }}
+        className={styles.resizeHandle}
         onMouseDown={(e) => {
           e.stopPropagation();
           handleMouseDown(e, 'resize');

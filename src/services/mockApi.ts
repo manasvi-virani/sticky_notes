@@ -3,18 +3,23 @@ import type { Note } from '../types';
 // Mock API configuration
 const API_CONFIG = {
   baseUrl: 'http://localhost:3001/api',
-  delay: 300, // Simulate network delay (reduced for better UX)
-  errorRate: 0, // 0% chance of error (disabled for smooth testing)
+  delay: 300,
+  errorRate: 0, 
 };
 
-// In-memory storage for the mock API
-let mockDatabase: Note[] = [];
+// Load initial data from localStorage or initialize as an empty array
+let mockDatabase: Note[] = JSON.parse(localStorage.getItem('mockDatabase') || '[]');
 
 // Utility function to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Utility function to simulate random errors
 const shouldSimulateError = () => Math.random() < API_CONFIG.errorRate;
+
+// Utility function to save the database to localStorage
+const syncToLocalStorage = () => {
+  localStorage.setItem('mockDatabase', JSON.stringify(mockDatabase));
+};
 
 // Mock API error class
 export class ApiError extends Error {
@@ -61,6 +66,8 @@ export const mockApi = {
       console.log('📡 Mock API: Created note', note.id);
     }
     
+    // Sync to localStorage
+    syncToLocalStorage();
     return { ...note };
   },
 
@@ -76,6 +83,8 @@ export const mockApi = {
     mockDatabase = notes.map(note => ({ ...note }));
     console.log('📡 Mock API: Bulk saved notes', notes.length);
     
+    // Sync to localStorage
+    syncToLocalStorage();
     return [...mockDatabase];
   },
 
@@ -95,6 +104,8 @@ export const mockApi = {
     }
     
     console.log('📡 Mock API: Deleted note', noteId);
+    // Sync to localStorage
+    syncToLocalStorage();
   },
 
   // Delete multiple notes
@@ -107,6 +118,9 @@ export const mockApi = {
     
     mockDatabase = mockDatabase.filter(note => !noteIds.includes(note.id));
     console.log('📡 Mock API: Bulk deleted notes', noteIds.length);
+    
+    // Sync to localStorage
+    syncToLocalStorage();
   },
 
   // Utility methods for testing
@@ -114,6 +128,8 @@ export const mockApi = {
     await delay(200);
     mockDatabase = [];
     console.log('📡 Mock API: Cleared all notes');
+    // Sync to localStorage
+    syncToLocalStorage();
   },
 
   // Get current database state (for debugging)

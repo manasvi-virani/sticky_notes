@@ -13,7 +13,7 @@ export interface Note {
   position: Position;
   size: Size;
   text: string;
-  color: string;
+  color: NoteColor;
   zIndex: number;
 }
 
@@ -27,11 +27,12 @@ export interface DragState {
 
 export type NoteColor = '#FFE066' | '#FF6B6B' | '#4ECDC4' | '#45B7D1' | '#96CEB4' | '#FFEAA7';
 
-export const NOTE_COLORS: NoteColor[] = [
-  '#FFE066', // Yellow
-  '#FF6B6B', // Red
-  '#4ECDC4', // Teal
-  '#45B7D1', // Blue
-  '#96CEB4', // Green
-  '#FFEAA7'  // Light Yellow
-];
+// Freeze the array to prevent mutation and improve performance
+export const NOTE_COLORS: readonly NoteColor[] = Object.freeze([
+  '#FFE066',
+  '#FF6B6B', 
+  '#4ECDC4',
+  '#45B7D1', 
+  '#96CEB4', 
+  '#FFEAA7'  
+]);

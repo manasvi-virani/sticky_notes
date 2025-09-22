@@ -10,7 +10,7 @@ A modern React TypeScript application for creating and managing sticky notes wit
 3. **Move Notes** - Drag notes around the canvas by clicking and dragging the note body
 4. **Delete Notes** - Drag notes to the trash zone in the bottom-right corner
 
-### Bonus Features (All implemented)
+### Bonus Features
 - **Text Editing** - Double-click any note to edit its text content
 - **Bring to Front** - Click on any note to bring it to the front (z-index management)
 - **Local Storage** - Notes are automatically saved and restored between sessions
@@ -21,7 +21,7 @@ A modern React TypeScript application for creating and managing sticky notes wit
 ## Getting Started
 
 ### Prerequisites
-- Node.js (version 18 or higher)
+- Node.js (version 22 or higher)
 - npm or yarn
 
 ### Installation
@@ -92,7 +92,6 @@ The application now supports two storage modes:
 - **Manual Sync**: Click the 🔄 Sync button to force synchronization
 - **Loading States**: Visual feedback during API operations (non-blocking for drag operations)
 - **Error Handling**: Automatic error notifications with retry options
-- **Offline Fallback**: Local storage backup when API is unavailable
 - **Optimistic Updates**: Immediate UI updates with background server sync
 - **Smooth Drag Performance**: Debounced API calls prevent loading interference during drag operations
 
